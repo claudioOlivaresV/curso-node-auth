@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
 import { AuthService } from "../../services/auth.service";
 import { CustomError } from "../../domain/erros/custom-error";
+import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto";
+import { log } from "node:console";
 
 export class AuthController {
   constructor(public readonly authService: AuthService) {}
@@ -15,10 +17,22 @@ export class AuthController {
     });
   }
 
-  async loginUser(req: Request, res: Response) {
+  loginUser = async (req: Request, res: Response) => {
+    const [error, loginDto] = LoginUserDto.create(req.body);
     // Lógica de inicio de sesión
-    res.json({ message: "Inicio de sesión exitoso" });
-  }
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
+    try {
+      const result = await this.authService.loginUser(loginDto!);
+
+      return res.json(result);
+    } catch (error) {
+      console.log(error);
+      this.handleError(res, error);
+    }
+  };
 
   registerUser = async (req: Request, res: Response) => {
     const [error, registerDto] = RegisterUserDto.create(req.body);

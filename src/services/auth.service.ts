@@ -1,14 +1,36 @@
 import { bcryptAdapter } from "../config/bcrypt.adapter";
+import { JwtAdapter } from "../config/jwt.adapter";
 import { UserModel } from "../data/mongooo/models/user.model";
+import { LoginUserDto } from "../domain/dtos/auth/login-user.dto";
 import { RegisterUserDto } from "../domain/dtos/auth/register-user.dto";
 import { UserEntity } from "../domain/entities/user-entity";
 import { CustomError } from "../domain/erros/custom-error";
 
 export class AuthService {
   constructor() {}
-  public async loginUser(email: string, password: string) {
-    // Lógica de inicio de sesión
-  }
+  public loginUser = async (loginUserDto: LoginUserDto) => {
+    //hacer el findOne
+
+    const existUser = await UserModel.findOne({ email: loginUserDto.email });
+    if (!existUser) {
+      throw CustomError.badRequest("El correo no está registrado");
+    }
+
+    const isMatch = await bcryptAdapter.compare(
+      loginUserDto.password,
+      existUser.password,
+    );
+    if (!isMatch) {
+      throw CustomError.badRequest("Contraseña incorrecta");
+    }
+    const { password, ...rest } = UserEntity.fromObject(existUser);
+
+    const token = await JwtAdapter.generateToken({ id: existUser.id });
+    if (!token) {
+      throw CustomError.internalServerError("Error al generar el token");
+    }
+    return { user: rest, token };
+  };
 
   public registerUser = async (registerUserDto: RegisterUserDto) => {
     // Lógica de registro
@@ -31,7 +53,6 @@ export class AuthService {
       const { password, ...rest } = UserEntity.fromObject(user);
       return { user: rest, token: "ABc" };
     } catch (error) {
-      console.log(error);
       throw CustomError.internalServerError(`${error}`);
     }
   };
