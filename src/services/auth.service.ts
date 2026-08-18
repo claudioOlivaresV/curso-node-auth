@@ -47,11 +47,14 @@ export class AuthService {
 
       await user.save();
       // generar token
-
+      const token = await JwtAdapter.generateToken({ id: user.id });
+      if (!token) {
+        throw CustomError.internalServerError("Error al generar el token");
+      }
       // Email confirmacion
 
       const { password, ...rest } = UserEntity.fromObject(user);
-      return { user: rest, token: "ABc" };
+      return { user: rest, token };
     } catch (error) {
       throw CustomError.internalServerError(`${error}`);
     }

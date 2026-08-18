@@ -1,0 +1,47 @@
+import { Request, Response } from "express";
+import { CustomError } from "../../domain/erros/custom-error";
+import { CreateCategoryDto } from "../../domain/dtos/categories/create-category.dto";
+import { CategoryService } from "../../services/category.services";
+import { error } from "console";
+
+export class CategoryController {
+  constructor(private readonly categoryServices: CategoryService) {}
+
+  private handleError(res: Response, error: unknown) {
+    if (error instanceof CustomError) {
+      return res.status(error.statusCode).json({
+        error: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Error desconocido",
+    });
+  }
+
+  createCategory = async (req: Request, res: Response) => {
+    const [error, createCategoryDto] = CreateCategoryDto.create(req.body);
+
+    if (error) {
+      return res.status(400).json({ error });
+    }
+
+    try {
+      const newCategory = await this.categoryServices.createCategory(
+        createCategoryDto!,
+        req.body.user,
+      );
+
+      return res.status(201).json(newCategory);
+    } catch (error) {
+      return this.handleError(res, error);
+    }
+  };
+
+  getCategory = async (req: Request, res: Response) => {
+    this.categoryServices
+      .getCategories()
+      .then((categories) => res.json(categories))
+      .catch((error) => this.handleError(res, error));
+  };
+}

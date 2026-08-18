@@ -17,7 +17,7 @@ export class CustomError extends Error {
   static forbidden(message: string) {
     return new CustomError(403, message);
   }
-  static internalServerError(message: string) {
+  static internalServerError(message: string = "Internal Server error") {
     return new CustomError(500, message);
   }
 }
