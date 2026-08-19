@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { AuthService } from "../../services/auth.service";
 import { CategoryController } from "./controller";
 import { AuthMiddleware } from "../middlewares/auht.middleware";
 import { CategoryService } from "../../services/category.services";
